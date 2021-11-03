@@ -35,3 +35,28 @@ app.get("/movies", (req, res) => {
       res.status(500).send();
     });
 });
+
+app.get("/movies/:pk", (req, res) => {
+  let pk = req.params.pk;
+  // console.log(pk);
+
+  let myQuery = `Select *
+  FROM Movie
+  Left join Genre
+  On genre.GenrePK = Movie.GenreFK
+  WHERE MoviePK = ${pk}`;
+
+  db.executeQuery(myQuery)
+    .then((result) => {
+      // console.log(result);
+      if (result[0]) {
+        res.send(result[0]);
+      } else {
+        res.status(404).send(`Bad request`);
+      }
+    })
+    .catch((err) => {
+      console.log("Error in /movie/:pk", err);
+      res.status(500).send();
+    });
+});
