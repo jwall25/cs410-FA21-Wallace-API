@@ -1,3 +1,5 @@
+//@login 1 @11:45
+
 const express = require("express");
 
 const bcrypt = require("bcryptjs");
@@ -22,6 +24,54 @@ app.get("/", (req, res) => {
 
 // app.post();
 // app.put();
+
+const auth = async (req, res, next) => {
+  console.log("in the middleware", req);
+};
+
+app.post("/reviews", auth, async (req, res) => {
+  try {
+    let movieFK = req.body.movieFK;
+    let summary = req.body.summary;
+    let rating = req.body.rating;
+
+    if (!movieFK || !summary || !Number.isInteger(rating)) {
+      return res.status(400).send("bad request");
+    }
+
+    summary = summary.replace("'", "''");
+    console.log("summary", summary);
+  } catch (err) {
+    console.log("error in POST /reviews", err);
+    res.status(500).send();
+  }
+});
+
+app.post("/contacts/login", async (req, res) => {
+  // console.log("/contacts/login called", req.body);
+  // 1. data validation
+
+  let email = req.body.email;
+  let password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).send("bad Request");
+  }
+
+  // 2. check user exists
+
+  let query = `SELECT *
+  From Contact
+  Where Email = '${email}'`;
+
+  let result = await db.executeQuery(query);
+
+  console.log(result);
+
+  // 3. check user password
+  // 4. if good, generate token
+  // 5. save token in database and send response back
+});
 
 app.post("/contacts", async (req, res) => {
   // res.send("/contacts called");
