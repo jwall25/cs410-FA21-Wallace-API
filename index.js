@@ -5,8 +5,11 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 
 const db = require("./dbConnectExec.js");
+const rockwellConfig = require("./config.js");
 
 const app = express();
+
+const jwt = require("jsonwebtoken");
 
 app.use(express.json());
 
@@ -64,13 +67,58 @@ app.post("/contacts/login", async (req, res) => {
   From Contact
   Where Email = '${email}'`;
 
-  let result = await db.executeQuery(query);
+  let result;
+
+  try {
+    result = await db.executeQuery(query);
+  } catch (myError) {
+    console.log("error in /contacts/login", myError);
+    return res.status(500).send();
+  }
 
   console.log(result);
 
+  if (!result[0]) {
+    return res.status(401).send("Invalid User Credentials.");
+  }
   // 3. check user password
+
+  let user = result[0];
+
+  if (!bcrypt.compareSync(password, user.Password)) {
+    console.log("Invalid Password");
+    return res.status(401).send("Invalid User Credentials");
+  }
+
   // 4. if good, generate token
+
+  let token = jwt.sign({ pk: user.ContactPK }, rockwellConfig.JWT, {
+    expiresIn: "60 minutes",
+  });
+
+  // console.log("token", token);
+
   // 5. save token in database and send response back
+
+  let setTokenQuery = `UPDATE Contact
+  SET Token = '${token}'
+  WHERE ContactPK = ${user.ContactPK}`;
+
+  try {
+    await db.executeQuery(setTokenQuery);
+    res.status(200).send({
+      token: token,
+      user: {
+        NameFirst: user.NameFirst,
+        NameLast: user.NameLast,
+        Email: user.Email,
+        ContactPK: user.ContactPK,
+      },
+    });
+  } catch (myError) {
+    console.log("error in setting user token", myError);
+    res.status(500).send();
+  }
 });
 
 app.post("/contacts", async (req, res) => {
