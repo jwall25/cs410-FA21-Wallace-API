@@ -1,6 +1,7 @@
 //@login 1 @11:45
 
 const express = require("express");
+const cors = require("cors");
 
 const bcrypt = require("bcryptjs");
 
@@ -14,9 +15,13 @@ const app = express();
 const jwt = require("jsonwebtoken");
 
 app.use(express.json());
+//azurwebsites.net, colostate.edu
+app.use(cors());
 
-app.listen(5000, () => {
-  console.log("App is running on Port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`App is running on Port ${PORT}`);
 });
 
 app.get("/hi", (req, res) => {
