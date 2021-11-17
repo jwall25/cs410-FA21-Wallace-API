@@ -7,6 +7,8 @@ const bcrypt = require("bcryptjs");
 const db = require("./dbConnectExec.js");
 const rockwellConfig = require("./config.js");
 
+const auth = require("./middleware/authenticate");
+
 const app = express();
 
 const jwt = require("jsonwebtoken");
@@ -28,10 +30,6 @@ app.get("/", (req, res) => {
 // app.post();
 // app.put();
 
-const auth = async (req, res, next) => {
-  console.log("in the middleware", req);
-};
-
 app.post("/reviews", auth, async (req, res) => {
   try {
     let movieFK = req.body.movieFK;
@@ -43,11 +41,27 @@ app.post("/reviews", auth, async (req, res) => {
     }
 
     summary = summary.replace("'", "''");
-    console.log("summary", summary);
+    // console.log("summary", summary);
+
+    // console.log("here is the contact", req.contact);
+
+    let insertQuery = `INSERT INTO Review(Summary,Rating,MovieFK,ContactFK)
+    OUTPUT inserted.ReviewPK, inserted.Summary, inserted.Rating, inserted.MovieFK
+    VALUES('${summary}', '${rating}', '${movieFK}', ${req.contact.ContactPK})`;
+
+    let insertedReview = await db.executeQuery(insertQuery);
+
+    console.log("inserted review", insertedReview);
+
+    res.status(201).send(insertedReview[0]);
   } catch (err) {
     console.log("error in POST /reviews", err);
     res.status(500).send();
   }
+});
+
+app.get("/contacts/me", auth, (req, res) => {
+  res.send(req.contact);
 });
 
 app.post("/contacts/login", async (req, res) => {
