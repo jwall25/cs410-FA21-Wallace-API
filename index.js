@@ -1,4 +1,4 @@
-//@login 1 @11:45
+//@logout @(18:29-4:10)
 
 const express = require("express");
 const cors = require("cors");
@@ -34,6 +34,31 @@ app.get("/", (req, res) => {
 
 // app.post();
 // app.put();
+
+// app.get("/reviews/me", auth, async (req, res) => {
+//   //get contactpk
+//   //query database for users records
+//   //send users reviews back to them
+// });
+
+// app.patch("/reviews/:pk", auth, async (req, res) => {});
+
+// app.delete("/reveiws/:pk");
+
+app.post("/contacts/logout", auth, (req, res) => {
+  let query = `UPDATE Contact
+  Set Token = NULL
+  Where ContactPK = ${req.contact.ContactPK}`;
+
+  db.executeQuery(query)
+    .then(() => {
+      res.status(200).send();
+    })
+    .catch((err) => {
+      console.log("error in POST /contacts/logout", err);
+      res.status(500).send();
+    });
+});
 
 app.post("/reviews", auth, async (req, res) => {
   try {
